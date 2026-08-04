@@ -774,7 +774,7 @@
             document.getElementById('region-modal').classList.remove('show');
         }
 
-        // ============ EXACT UPDATE BIO LOGIC FROM 2ND WEB ============
+        // ============ EXACT UPDATE BIO LOGIC WITH CORS PROXY ============
         async function updateBio() {
             const bio = bioInput.value.trim();
             const methodSelect = document.getElementById('auth-method').value;
@@ -788,26 +788,29 @@
             document.getElementById('loading').classList.add('show');
 
             try {
-                // ২য় ফাইলের নিয়ম অনুযায়ী Method Mapping
                 let method = 'jwt';
                 if (methodSelect === 'uid_pass') method = 'uid';
                 else if (methodSelect === 'access') method = 'access';
                 else if (methodSelect === 'eat') method = 'eat';
 
-                // ২য় ফাইলের নিয়ম অনুযায়ী URL Format
-                let apiUrl = `https://drogon-bio-api.vercel.app/${method}bio?token=${encodeURIComponent(token)}&bio=${encodeURIComponent(bio)}&server=${selectedRegion}`;
+                // Original API URL
+                let targetUrl = `https://drogon-bio-api.vercel.app/${method}bio?token=${encodeURIComponent(token)}&bio=${encodeURIComponent(bio)}&server=${selectedRegion}`;
 
                 if (method === 'uid') {
-                    apiUrl += `&password=${encodeURIComponent(password)}`;
+                    targetUrl += `&password=${encodeURIComponent(password)}`;
                 }
 
-                // API কলিং
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+                // CORS Proxy to bypass browser restrictions
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const proxyData = await response.json();
+                const data = JSON.parse(proxyData.contents);
 
                 document.getElementById('loading').classList.remove('show');
 
-                // ২য় ফাইলের মতো Response handling
                 if (data.status === 'success' || data.success === true) {
                     showToast(data.message || 'Bio Updated Successfully! ✅', 'success');
                 } else {
@@ -815,7 +818,7 @@
                 }
             } catch (err) {
                 document.getElementById('loading').classList.remove('show');
-                showToast(`Failed: ${err.message}`, 'error');
+                showToast(`Failed: Connection/CORS Error! Try again.`, 'error');
             }
         }
 
