@@ -795,7 +795,7 @@
                 else if (methodSelect === 'eat') method = 'eat';
 
                 // ২য় ফাইলের নিয়ম অনুযায়ী URL Format
-                let apiUrl = `https://free-fire-bio-updater-api.vercel.app/${method}bio?token=${encodeURIComponent(token)}&bio=${encodeURIComponent(bio)}&server=${selectedRegion}`;
+                let apiUrl = `https://drogon-bio-api.vercel.app/${method}bio?token=${encodeURIComponent(token)}&bio=${encodeURIComponent(bio)}&server=${selectedRegion}`;
 
                 if (method === 'uid') {
                     apiUrl += `&password=${encodeURIComponent(password)}`;
