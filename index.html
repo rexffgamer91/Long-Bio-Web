@@ -454,7 +454,7 @@
         <div class="header">
             <div class="header-title">
                 <i class="fas fa-fire"></i>
-                FF BIO UPDATER
+                ASD BIO UPDATER
             </div>
             <div class="credit-badge">
                 <i class="fas fa-bolt"></i> Credit by RFG GAMER
@@ -538,7 +538,7 @@
 
         <button class="update-btn" onclick="updateBio()">
             <i class="fas fa-paper-plane"></i>
-            UPDATE BIOOOO
+            UPDATE BIO
         </button>
     </div>
 
@@ -774,48 +774,44 @@
             document.getElementById('region-modal').classList.remove('show');
         }
 
-        // ============ UPDATE BIO (Flask Backend Router Fixed) ============
+        // ============ EXACT UPDATE BIO LOGIC FROM 2ND WEB ============
         async function updateBio() {
             const bio = bioInput.value.trim();
-            const method = document.getElementById('auth-method').value;
+            const methodSelect = document.getElementById('auth-method').value;
             const token = document.getElementById('token-input').value.trim();
             const password = document.getElementById('password-input').value.trim();
 
             if (!bio) { showToast('Please enter a bio!', 'error'); return; }
             if (!token) { showToast('Please enter token/UID!', 'error'); return; }
-            if (method === 'uid_pass' && !password) { showToast('Please enter password!', 'error'); return; }
+            if (methodSelect === 'uid_pass' && !password) { showToast('Please enter password!', 'error'); return; }
 
             document.getElementById('loading').classList.add('show');
 
             try {
-                // Mapping UI Method keys to Flask backend methods
-                let apiMethod = 'jwt';
-                if (method === 'uid_pass') apiMethod = 'uid';
-                else if (method === 'access') apiMethod = 'access';
-                else if (method === 'eat') apiMethod = 'eat';
+                // ২য় ফাইলের নিয়ম অনুযায়ী Method Mapping
+                let method = 'jwt';
+                if (methodSelect === 'uid_pass') method = 'uid';
+                else if (methodSelect === 'access') method = 'access';
+                else if (methodSelect === 'eat') method = 'eat';
 
-                const bodyData = {
-                    token: token,
-                    bio: bio,
-                    server: selectedRegion,
-                    method: apiMethod,
-                    password: password
-                };
+                // ২য় ফাইলের নিয়ম অনুযায়ী URL Format
+                let apiUrl = `https://free-fire-bio-updater-api.vercel.app/${method}bio?token=${encodeURIComponent(token)}&bio=${encodeURIComponent(bio)}&server=${selectedRegion}`;
 
-                // Request to Flask Server Backend Route (/api/update)
-                const response = await fetch('/api/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyData)
-                });
+                if (method === 'uid') {
+                    apiUrl += `&password=${encodeURIComponent(password)}`;
+                }
 
+                // API কলিং
+                const response = await fetch(apiUrl);
                 const data = await response.json();
+
                 document.getElementById('loading').classList.remove('show');
 
-                if (data.status === 'success') {
+                // ২য় ফাইলের মতো Response handling
+                if (data.status === 'success' || data.success === true) {
                     showToast(data.message || 'Bio Updated Successfully! ✅', 'success');
                 } else {
-                    showToast(`Error: ${data.message || 'Update failed'}`, 'error');
+                    showToast(data.message || 'Failed to update bio', 'error');
                 }
             } catch (err) {
                 document.getElementById('loading').classList.remove('show');
