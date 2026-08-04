@@ -17,7 +17,6 @@
             overflow-x: hidden;
         }
 
-        /* Matrix Rain Canvas */
         #matrix-canvas {
             position: fixed;
             top: 0; left: 0;
@@ -35,7 +34,6 @@
             padding-bottom: 40px;
         }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 15px 0 10px;
@@ -92,7 +90,6 @@
 
         .header-links a:hover { opacity: 1; }
 
-        /* Cards */
         .card {
             background: rgba(20, 25, 35, 0.9);
             border: 1px solid rgba(0, 255, 136, 0.15);
@@ -121,7 +118,6 @@
 
         .card-title i { font-size: 1rem; }
 
-        /* Bio Editor */
         .bio-textarea {
             width: 100%;
             min-height: 100px;
@@ -154,7 +150,6 @@
         .char-counter.warning { color: #ffaa00; }
         .char-counter.danger { color: #ff4444; }
 
-        /* Live Preview */
         .preview-box {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(0, 255, 136, 0.15);
@@ -169,7 +164,6 @@
 
         .preview-box.empty { color: rgba(255, 255, 255, 0.3); }
 
-        /* Formatting Buttons */
         .formatting-buttons {
             display: flex;
             gap: 8px;
@@ -201,7 +195,6 @@
         .btn-underline { background: linear-gradient(135deg, #22c55e, #16a34a); }
         .btn-strike { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
-        /* Color Palette */
         .color-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -241,7 +234,6 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
-        /* Auth Method */
         .auth-select {
             width: 100%;
             padding: 12px 15px;
@@ -289,7 +281,6 @@
 
         .auth-input::placeholder { color: rgba(255, 255, 255, 0.3); }
 
-        /* Update Button */
         .update-btn {
             width: 100%;
             padding: 15px;
@@ -319,7 +310,6 @@
         .update-btn:active { transform: translateY(0); }
         .update-btn i { font-size: 1.1rem; }
 
-        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -384,7 +374,6 @@
 
         .flag-emoji { font-size: 1.4rem; }
 
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -420,7 +409,6 @@
             color: #fff;
         }
 
-        /* Loading */
         .loading-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -453,7 +441,6 @@
             font-size: 1rem;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
         ::-webkit-scrollbar-thumb { background: rgba(0, 255, 136, 0.3); border-radius: 3px; }
@@ -551,7 +538,7 @@
 
         <button class="update-btn" onclick="updateBio()">
             <i class="fas fa-paper-plane"></i>
-            UPDATE BIO
+            UPDATE BIOOOO
         </button>
     </div>
 
@@ -645,10 +632,7 @@
             {hex: '#00BFFF', name: '00BFFF'}, {hex: '#1E90FF', name: '1E90FF'},
             {hex: '#0000FF', name: '0000FF'}, {hex: '#0000CD', name: '0000CD'},
             {hex: '#00008B', name: '00008B'}, {hex: '#191970', name: '191970'},
-            {hex: '#00BFFF', name: '00BFFF'}, {hex: '#4682B4', name: '4682B4'},
-            {hex: '#b', name: 'b'}, {hex: '#c', name: 'c'},
-            {hex: '#u', name: 'u'}, {hex: '#s', name: 's'},
-            {hex: '#i', name: 'i'}
+            {hex: '#00BFFF', name: '00BFFF'}, {hex: '#4682B4', name: '4682B4'}
         ];
 
         let selectedColor = null;
@@ -658,10 +642,10 @@
 
         function initColors() {
             const grid = document.getElementById('color-grid');
-            colors.forEach((color, index) => {
+            colors.forEach((color) => {
                 const btn = document.createElement('div');
                 btn.className = 'color-btn';
-                btn.style.backgroundColor = color.hex.startsWith('#') ? color.hex : '#333';
+                btn.style.backgroundColor = color.hex;
                 btn.dataset.name = color.name;
                 btn.onclick = () => selectColor(color, btn);
                 grid.appendChild(btn);
@@ -790,7 +774,7 @@
             document.getElementById('region-modal').classList.remove('show');
         }
 
-        // ============ UPDATE BIO ============
+        // ============ UPDATE BIO (Flask Backend Router Fixed) ============
         async function updateBio() {
             const bio = bioInput.value.trim();
             const method = document.getElementById('auth-method').value;
@@ -804,27 +788,34 @@
             document.getElementById('loading').classList.add('show');
 
             try {
-                let url = 'https://drogon-bio-api.vercel.app/bio';
+                // Mapping UI Method keys to Flask backend methods
+                let apiMethod = 'jwt';
+                if (method === 'uid_pass') apiMethod = 'uid';
+                else if (method === 'access') apiMethod = 'access';
+                else if (method === 'eat') apiMethod = 'eat';
 
-                if (method === 'uid_pass') {
-                    url += `bio=${encodeURIComponent(bio)}&uid=${token}&pass=${password}`;
-                } else if (method === 'jwt') {
-                    url += `bio=${encodeURIComponent(bio)}&jwt=${token}`;
-                } else if (method === 'access') {
-                    url += `bio=${encodeURIComponent(bio)}&access=${token}`;
-                } else if (method === 'eat') {
-                    url += `bio=${encodeURIComponent(bio)}&eat=${token}`;
-                }
+                const bodyData = {
+                    token: token,
+                    bio: bio,
+                    server: selectedRegion,
+                    method: apiMethod,
+                    password: password
+                };
 
-                const response = await fetch(url);
+                // Request to Flask Server Backend Route (/api/update)
+                const response = await fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+
                 const data = await response.json();
-
                 document.getElementById('loading').classList.remove('show');
 
-                if (data.error) {
-                    showToast(`Error: ${data.error}`, 'error');
+                if (data.status === 'success') {
+                    showToast(data.message || 'Bio Updated Successfully! ✅', 'success');
                 } else {
-                    showToast('Bio Updated Successfully! ✅', 'success');
+                    showToast(`Error: ${data.message || 'Update failed'}`, 'error');
                 }
             } catch (err) {
                 document.getElementById('loading').classList.remove('show');
